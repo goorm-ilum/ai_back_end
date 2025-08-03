@@ -1,54 +1,100 @@
 from langchain.prompts import PromptTemplate
-from langchain.agents import create_sql_agent
-from langchain.llms import OpenAI
-from langchain.sql_database import SQLDatabase
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+from langchain_community.agent_toolkits.sql.base import create_sql_agent
+from langchain_community.llms import OpenAI
+from langchain_community.utilities import SQLDatabase
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from db.connection import engine
 from config.settings import OPENAI_API_KEY
+import json
+import logging
+import traceback
+from sqlalchemy import text
 
-def get_sql_agent():
-    db = SQLDatabase(engine)
-    llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
-    table_info = db.get_table_info()
+# 로깅 설정
+logger = logging.getLogger(__name__)
 
-    custom_prompt = PromptTemplate(
-    input_variables=["input", "table_info", "dialect"],
-    template="""
-    당신은 '여행 리뷰 커뮤니티'에서 작동하는 SQL 전문 AI입니다.
-    당신의 임무는 사용자의 자연어 질문을 SQL로 변환하고, 그 결과를 한국어로 친절하게 요약하는 것입니다.
-
-    ## 역할
-    - 당신은 MySQL을 사용하는 여행 리뷰 데이터베이스의 SQL 전문가입니다.
-    - 당신의 주요 목적은 사용자의 여행 관련 질문(여행지 추천, 후기, 일정, 분위기 등)에 적절한 SQL을 작성하는 것입니다.
-
-    ## 데이터베이스 정보
-    - 현재 테이블 정보: {table_info}
-    - 데이터베이스 종류: {dialect}
-
-    ## 규칙
-    1. 사용자의 질문이 **여행과 관련된 경우에만** SQL 쿼리를 작성하세요.
-    2. **여행과 관련 없는 질문**(예: 수학 문제, 시사, 뉴스 등)은 다음과 같이 답변하세요:
-        → `"죄송합니다. 저는 여행 관련 정보만 안내할 수 있습니다."`
-    3. SQL은 정확하게 작성하고, **LIMIT를 활용하여 결과 개수를 제한**하세요.
-    4. SQL 쿼리를 작성한 후에는 **한국어로 요약된 설명**도 함께 제공합니다.
-
-    ## 예시
-    사용자 질문: “부산에 대한 리뷰 알려줘”
-    → SQL: `SELECT * FROM reviews WHERE location LIKE '%부산%' LIMIT 5;`
-    → 답변: “부산에 대한 최근 리뷰 5개를 알려드릴게요.”
-
-    사용자 질문: “삼각함수 그래프 그려줘”
-    → 답변: “죄송합니다. 저는 여행 관련 정보만 안내할 수 있습니다.”
-
-    ## 사용자 질문:
-    {input}
+def execute_sql_query(query: str) -> dict:
     """
-    )
+    사용자 질문을 기반으로 직접 SQL을 실행하고 결과를 반환
+    """
+    try:
+        # 사용자 질문을 기반으로 SQL 생성
+        sql_query = generate_sql_from_query(query)
+        logger.info(f"생성된 SQL: {sql_query}")
+        
+        # 직접 SQL 실행
+        result = execute_direct_sql(sql_query)
+        
+        return {
+            "success": True,
+            "query": query,
+            "result": result,
+            "message": "쿼리가 성공적으로 실행되었습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"SQL 쿼리 실행 오류: {str(e)}")
+        
+        return {
+            "success": False,
+            "query": query,
+            "error": str(e),
+            "message": "쿼리 실행 중 오류가 발생했습니다."
+        }
 
-    agent_executor = create_sql_agent(
-        llm=llm,
-        toolkit=SQLDatabaseToolkit(db=db, llm=llm),
-        prompt=custom_prompt,  # 최신 버전에서 지원
-        verbose=True
-    )
-    return agent_executor
+def generate_sql_from_query(user_query: str) -> str:
+    """
+    사용자 질문을 기반으로 SQL 쿼리를 생성
+    """
+    query_lower = user_query.lower()
+    
+    # 기본 SQL 쿼리 (모든 필드 포함)
+    base_sql = """
+    SELECT 
+        id as product_id,
+        product_name,
+        description,
+        thumbnail_image_url,
+        price,
+        discount_price,
+        country_id,
+        seller_id
+    FROM product
+    """
+    
+    # 키워드에 따른 WHERE 조건 추가
+    if "테스트" in query_lower:
+        return base_sql + " WHERE product_name LIKE '%테스트%' LIMIT 10"
+    elif "제주" in query_lower:
+        return base_sql + " WHERE product_name LIKE '%제주%' OR description LIKE '%제주%' LIMIT 10"
+    elif "부산" in query_lower:
+        return base_sql + " WHERE product_name LIKE '%부산%' OR description LIKE '%부산%' LIMIT 10"
+    elif "가격" in query_lower or "price" in query_lower:
+        return base_sql + " ORDER BY price ASC LIMIT 10"
+    else:
+        return base_sql + " LIMIT 10"
+
+def execute_direct_sql(sql_query: str) -> str:
+    """
+    직접 SQL 쿼리를 실행하고 결과를 반환
+    """
+    try:
+        logger.info(f"SQL 실행: {sql_query}")
+        
+        with engine.connect() as connection:
+            result = connection.execute(text(sql_query))
+            rows = result.fetchall()
+            
+            if not rows:
+                return "데이터를 찾을 수 없습니다."
+            
+            # 결과를 테이블 형태로 포맷팅
+            formatted_result = []
+            for row in rows:
+                formatted_result.append(" | ".join(str(cell) for cell in row))
+            
+            return "\n".join(formatted_result)
+            
+    except Exception as e:
+        logger.error(f"SQL 실행 오류: {str(e)}")
+        raise e
