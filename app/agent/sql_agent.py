@@ -1,8 +1,8 @@
 from langchain_openai import ChatOpenAI
 from langchain_experimental.sql import SQLDatabaseChain
 from langchain.sql_database import SQLDatabase
-from config.settings import OPENAI_API_KEY
-from db.connection import get_mysql_engine
+from app.config.settings import OPENAI_API_KEY
+from app.db.connection import get_mysql_engine
 import re
 
 def ask_sql_agent(query: str):

@@ -1,16 +1,21 @@
+from app.services.predict import predict
+from app.services.preprocess import split_and_merge_sentences
 
 def run_inference(review_data):
-    
-    # 2) 모델 출력 처리
-    processed_result = {
-        "reviewId": review_data["reviewId"],
-        "productId": review_data["productId"],
-        "sentiment": "positive"  # 실제 모델 출력 값으로 교체
-    }
-    
-    # 3) Kafka에 넣기 위해 return
-    return processed_result
+    review_comment = review_data["comment"]
 
-if __name__ == "__main__":
-    test_data = {"reviewId":11,"productId":1,"comment":"야호야호야호야호야호"}
-    print(run_inference(test_data))
+    # --- 전처리: 문장 분리 + 병합 ---
+    sentences = split_and_merge_sentences(review_comment)
+
+    results = []
+    for sentence in sentences:
+        aspect_label, polarity_label = predict(sentence)
+        results.append({
+            "reviewId": review_data["reviewId"],
+            "productId": review_data["productId"],
+            "sentence": sentence,
+            "aspect": aspect_label,
+            "polarity": polarity_label
+        })
+
+    return results

@@ -2,6 +2,8 @@
 *.parquet
 *.pkl
 *.pt
+*.txt
+*.json
 /reviewmodel/dataset/*
 /__pycache__/
 *.pyc

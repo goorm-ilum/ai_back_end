@@ -1,8 +1,8 @@
 import threading
 from fastapi import FastAPI
-from routes.products import router
-from config.kafka import consumer, producer
-from services.ai_model import run_inference
+from app.routes.products import router
+from app.config.kafka import consumer, producer
+from app.services.ai_model import run_inference
 
 app = FastAPI()
 app.include_router(router, prefix="/api")

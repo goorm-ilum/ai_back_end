@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from agent.sql_agent import ask_sql_agent
+from app.agent.sql_agent import ask_sql_agent
 
 router = APIRouter()
 

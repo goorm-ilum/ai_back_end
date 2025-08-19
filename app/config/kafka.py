@@ -1,4 +1,3 @@
-# config/kafka.py
 from kafka import KafkaConsumer, KafkaProducer
 import json
 
