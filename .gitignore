@@ -1,3 +1,7 @@
 .env
 *.parquet
+*.pkl
+*.pt
 /reviewmodel/dataset/*
+/__pycache__/
+*.pyc
