@@ -126,29 +126,4 @@ ai_back_end/
 │   └── settings.py        # 환경변수 및 설정 관리
 ├── requirements.txt       # 의존성 목록
 └── .env                   # 환경변수 파일 (생성 필요)
-```
-
-## 🔧 문제 해결
-
-### ⚠️ 자주 발생하는 오류
-
-1. **🔑 OpenAI API 키 오류**
-   ```
-   OPENAI_API_KEY가 설정되지 않았습니다!
-   ```
-   → `.env` 파일에 올바른 OpenAI API 키를 설정하세요.
-
-2. **🗄️ 데이터베이스 연결 오류**
-   ```
-   DB_URL이 설정되지 않았습니다!
-   ```
-   → `.env` 파일에 올바른 MySQL 연결 문자열을 설정하세요.
-
-3. **🚫 포트 충돌 오류**
-   ```
-   Address already in use
-   ```
-   → 다른 포트를 사용하거나 기존 프로세스를 종료하세요:
-   ```bash
-   uvicorn main:app --reload --host 0.0.0.0 --port 8001
-   ```
+``
