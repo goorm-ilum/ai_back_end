@@ -11,9 +11,3 @@ consumer = KafkaConsumer(
     group_id='fastapi-ai-group',
     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
 )
-
-# Producer 설정
-producer = KafkaProducer(
-    bootstrap_servers=KAFKA_BROKER,
-    value_serializer=lambda m: json.dumps(m).encode('utf-8')
-)

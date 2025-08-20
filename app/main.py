@@ -1,8 +1,6 @@
 import threading
 from fastapi import FastAPI
 from app.routes.products import router
-from app.config.kafka import consumer, producer
-from app.services.ai_model import run_inference
 
 app = FastAPI()
 app.include_router(router, prefix="/api")
@@ -12,11 +10,13 @@ def root():
     return {"message": "AI SQL Agent API"}
 
 def consume_kafka():
-    for message in consumer:
-        data = message.value
-        result = run_inference(data)
-        producer.send("review.processed", result)
-        producer.flush()
+    try:
+        from app.config.kafka import consumer
+        for message in consumer:
+            data = message.value
+            print(f"[Kafka] 받은 메시지: {data}")
+    except Exception as e:
+        print(f"[Kafka] Consumer 연결 실패: {e}")
 
-# 백그라운드 스레드로 실행 / daemon=True로 설정하여 메인 스레드 종료 시 자동 종료
+# 백그라운드 스레드에서 안전하게 실행
 threading.Thread(target=consume_kafka, daemon=True).start()

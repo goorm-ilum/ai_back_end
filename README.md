@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-DB_URL=mysql+pymysql://username:password@localhost:3306/database_name
+MYSQLDB_URL=mysql+pymysql://username:password@localhost:3306/database_name
 ```
 
 ### 4️⃣ 서버 실행

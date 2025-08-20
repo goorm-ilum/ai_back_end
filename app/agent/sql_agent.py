@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain_experimental.sql import SQLDatabaseChain
 from langchain.sql_database import SQLDatabase
 from app.config.settings import OPENAI_API_KEY
-from app.db.connection import get_mysql_engine
+from app.db.mysql import engine
 import re
 
 def ask_sql_agent(query: str):
@@ -12,8 +12,7 @@ def ask_sql_agent(query: str):
         print(f"[SQL Agent] 시작 - 쿼리: {query}")
         
         # 데이터베이스 연결
-        engine = get_mysql_engine()
-        db = SQLDatabase(engine=engine)
+        db = SQLDatabase(engine)
         llm = ChatOpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
         db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
 
@@ -21,7 +20,7 @@ def ask_sql_agent(query: str):
         prompt = f"""
         당신은 여행 상품 데이터베이스에서 SQL을 이용해 사용자의 질문에 적절한 여행 상품들을 찾는 AI입니다.
 
-        # 데이터베이스 스키마:
+        # 데이터베이스 스키마:  
         - product 테이블: 상품 정보 (id, product_name, description, price, etc.)
         - hash_tag 테이블: 해시태그 정보 (product_id, hashtag) - 실제 테이블명은 hashtag일 수 있음
         - review 테이블: 리뷰 정보 (product_id, comment, review_star)
@@ -39,7 +38,7 @@ def ask_sql_agent(query: str):
         - 상품 ID의 콤마(,) 나열 또는 "해당 상품은 존재하지 않습니다." 문구 외에는 **어떠한 추가 설명도 하지 마세요**.
         - 자연어 설명이나 다른 텍스트는 절대 출력하지 마세요.
         - **SQL 쿼리 자체를 출력하지 마세요. 오직 실행 결과만 출력하세요.**
-        - **테이블이 존재하지 않으면 product 테이블만 사용하여 검색하세요.**
+        - **테이블이 존재하지 않으면 product 테이블만 사용하여 검색하세요.**qle
 
         # 예시 출력 형식:
         - "1,3,5" (상품 ID가 1, 3, 5인 경우)
