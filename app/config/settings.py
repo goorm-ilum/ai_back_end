@@ -10,6 +10,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MYSQLDB_URL = os.getenv("MYSQLDB_URL")
+MONGODB_URL = os.getenv("MONGODB_URL")
 
 if not OPENAI_API_KEY:
     logger.error("OPENAI_API_KEY가 설정되지 않았습니다!")
