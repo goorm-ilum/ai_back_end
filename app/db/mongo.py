@@ -13,7 +13,9 @@ async def connect_to_mongo():
     return review_keywords_collection
 
 async def close_mongo_connection():
-    mongo_client.close()
+    global mongo_client
+    if mongo_client is not None:
+        mongo_client.close()
 
 def get_mongo_db():
     return mongo_db

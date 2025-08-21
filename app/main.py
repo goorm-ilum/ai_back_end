@@ -18,7 +18,7 @@ async def consume_kafka():
         await asyncio.sleep(0.5)
 
     try:
-        await consumer.start()  # AIOKafkaConsumer는 start 필요
+        await consumer.start()
         async for message in consumer:
             data = message.value
             print(f"[Kafka] 받은 메시지: {data}")

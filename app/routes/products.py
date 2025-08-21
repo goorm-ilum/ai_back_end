@@ -17,12 +17,11 @@ async def search_products_with_ai(request: AIProductQuery):
         raw_result = await asyncio.to_thread(ask_sql_agent, request.query)
         print(f"[FastAPI] AI Agent 결과: {raw_result}")
         
-        # 결과가 에러 메시지인지 확인
         if "해당 상품은 존재하지 않습니다" in raw_result:
             print(f"[FastAPI] 검색 결과 없음: {raw_result}")
             return {"product_ids": []}
         
-        # 숫자 ID만 추출
+        #  상품 ID 추출
         id_list = [id.strip() for id in raw_result.split(",") if id.strip().isdigit()]
         print(f"[FastAPI] 추출된 상품 ID: {id_list}, 데이터타입: {type(id_list)}")
         
